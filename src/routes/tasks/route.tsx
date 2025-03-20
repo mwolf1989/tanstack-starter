@@ -25,15 +25,15 @@ const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
   }
 });
 
-export const Route = createFileRoute("/dashboard")({
-  component: DashboardLayout,
+export const Route = createFileRoute("/tasks")({
+  component: TasksLayout,
   loader: async ({ context }) => {
     // Invalidate the query to ensure fresh data
-    await context.queryClient.invalidateQueries({ queryKey: ["dashboard-auth"] });
+    await context.queryClient.invalidateQueries({ queryKey: ["tasks-auth"] });
     
     // Use the server function to check authentication
     const result = await context.queryClient.fetchQuery({
-      queryKey: ["dashboard-auth"],
+      queryKey: ["tasks-auth"],
       queryFn: () => checkAuth(),
       staleTime: 0, // Consider the data stale immediately
     });
@@ -52,7 +52,7 @@ export const Route = createFileRoute("/dashboard")({
   },
 });
 
-function DashboardLayout() {
+function TasksLayout() {
   const { user } = Route.useLoaderData();
   
   return (
@@ -61,7 +61,7 @@ function DashboardLayout() {
       <div className="flex items-center gap-2">
         This is a protected layout:
         <pre className="rounded-md border bg-card p-1 text-card-foreground">
-          routes/dashboard/route.tsx
+          routes/tasks/route.tsx
         </pre>
       </div>
 
@@ -76,7 +76,7 @@ function DashboardLayout() {
         <Link to="/">Back to Home</Link>
       </Button>
       <Button type="button" asChild className="w-fit" size="lg">
-        <Link to="/tasks">Tasks</Link>
+        <Link to="/dashboard">Dashboard</Link>
       </Button>
 
       <Outlet />

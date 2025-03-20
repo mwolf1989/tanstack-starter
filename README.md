@@ -32,6 +32,24 @@ A minimal starter template for 🏝️ TanStack Start with Supabase authenticati
    ```
    The development server should be now running at [http://localhost:3000](http://localhost:3000).
 
+## Database Seeding
+
+This template includes a database seeding system using Supabase. To seed the database with sample data:
+
+1. Link your project (if not already linked):
+   ```bash
+   pnpm supabase link --project-ref your-project-ref
+   ```
+
+2. Run the seed command:
+   ```bash
+   pnpm db:seed
+   ```
+
+This will reset your database and apply the seed data defined in `supabase/seed.sql`. The seed file includes sample todos that you can use as a starting point.
+
+Note: The seed data uses a placeholder user ID. You'll need to replace the user IDs in `supabase/seed.sql` with actual user IDs from your Supabase auth system.
+
 ## Authentication with Supabase
 
 This template uses Supabase for authentication with server-side rendering (SSR) support. Key features:
