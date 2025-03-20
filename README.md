@@ -5,8 +5,7 @@ A minimal starter template for 🏝️ TanStack Start with Supabase authenticati
 - [React 19](https://react.dev) + [React Compiler](https://react.dev/learn/react-compiler)
 - TanStack [Start](https://tanstack.com/start/latest) + [Router](https://tanstack.com/router/latest) + [Query](https://tanstack.com/query/latest)
 - [Tailwind CSS v4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
-- [Supabase](https://supabase.com/) Authentication with SSR
-- [Drizzle ORM](https://orm.drizzle.team/) + PostgreSQL
+- [Supabase](https://supabase.com/) Authentication and Database with SSR
 
 ## Getting Started
 
@@ -24,15 +23,10 @@ A minimal starter template for 🏝️ TanStack Start with Supabase authenticati
    ```env
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    ```
 
-4. Push the schema to your database with drizzle-kit:
-   ```bash
-   pnpm db push # npm run db push
-   ```
-   https://orm.drizzle.team/docs/migrations
-
-5. Run the development server:
+4. Run the development server:
    ```bash
    pnpm dev # npm run dev
    ```
@@ -88,7 +82,6 @@ This template uses Supabase for authentication with server-side rendering (SSR) 
 
 These scripts in [package.json](./package.json#L5) use **pnpm** by default, but you can modify them to use your preferred package manager.
 
-- **`db`** - Run drizzle-kit commands. (e.g. `pnpm db generate` to generate a migration)
 - **`ui`** - The shadcn/ui CLI. (e.g. `pnpm ui add button` to add the button component)
 - **`format`** and **`lint`** - Run Prettier and ESLint.
 

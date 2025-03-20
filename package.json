@@ -8,7 +8,6 @@
     "start": "vinxi start",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "db": "drizzle-kit",
     "ui": "pnpm dlx shadcn@canary"
   },
   "dependencies": {
@@ -26,9 +25,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.40.1",
     "lucide-react": "^0.483.0",
-    "postgres": "^3.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",
@@ -44,7 +41,6 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "babel-plugin-react-compiler": "latest",
-    "drizzle-kit": "^0.30.5",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-react-compiler": "latest",
