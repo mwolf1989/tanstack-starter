@@ -72,6 +72,32 @@ This template uses Supabase for authentication with server-side rendering (SSR) 
    });
    ```
 
+## Model Context Protocol (MCP)
+
+This template includes support for the Model Context Protocol (MCP), which allows AI tools to interact with your Supabase database using natural language commands. To set up MCP:
+
+1. Create a `.cursor` directory in your project root if it doesn't exist
+2. Create a `.cursor/mcp.json` file with the following configuration:
+   ```json
+   {
+     "mcpServers": {
+       "supabase": {
+         "command": "npx",
+         "args": ["-y", "@modelcontextprotocol/server-postgres", "<connection-string>"]
+       }
+     }
+   }
+   ```
+3. Replace `<connection-string>` with your Supabase database connection string from your project's Connection settings
+
+Once configured, you can use AI tools to:
+- Query your database using natural language
+- Create and modify tables
+- Perform SQL operations
+- Get insights about your data structure
+
+For more information, read the [Supabase MCP Article](https://supabase.com/docs/guides/getting-started/mcp?queryGroups=os&os=mac).
+
 ## Issue watchlist
 
 - [React Compiler docs](https://react.dev/learn/react-compiler), [Working Group](https://github.com/reactwg/react-compiler/discussions) - React Compiler is still in beta. You can disable it in [app.config.ts](./app.config.ts#L15) if you prefer.
