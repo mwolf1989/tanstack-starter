@@ -1,11 +1,24 @@
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
-import authClient from "~/lib/auth-client";
 import ThemeToggle from "~/lib/components/ThemeToggle";
 import { Button } from "~/lib/components/ui/button";
+import { createServerFn } from "@tanstack/react-start";
+import { getSupabaseServerClient } from "~/lib/server/auth";
+
+// Create a server function for sign out
+export const signOutFn = createServerFn().handler(async () => {
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("Sign out error:", error);
+    return { error: true, message: error.message };
+  }
+  return { success: true };
+});
 
 export const Route = createFileRoute("/")({
   component: Home,
   loader: ({ context }) => {
+    // Ensure we're using the latest user data from context
     return { user: context.user };
   },
 });
@@ -14,6 +27,20 @@ function Home() {
   const { queryClient } = Route.useRouteContext();
   const { user } = Route.useLoaderData();
   const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOutFn();
+      // Invalidate all auth-related queries
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-auth"] });
+      // Refresh the router data
+      await router.invalidate();
+      router.navigate({ to: "/signin" });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 p-6">
@@ -27,7 +54,7 @@ function Home() {
 
       {user ? (
         <div className="flex flex-col gap-2">
-          <p>Welcome back, {user.name}!</p>
+          <p>Welcome back, {user.email || "User"}!</p>
           <Button type="button" asChild className="w-fit" size="lg">
             <Link to="/dashboard">Go to Dashboard</Link>
           </Button>
@@ -37,11 +64,7 @@ function Home() {
           </div>
 
           <Button
-            onClick={async () => {
-              await authClient.signOut();
-              await queryClient.invalidateQueries({ queryKey: ["user"] });
-              await router.invalidate();
-            }}
+            onClick={handleSignOut}
             type="button"
             className="w-fit"
             variant="destructive"

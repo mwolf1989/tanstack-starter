@@ -7,30 +7,49 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getWebRequest } from "@tanstack/react-start/server";
 
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
-import { auth } from "~/lib/server/auth";
+import { getSupabaseServerClient } from "~/lib/server/auth";
 import appCss from "~/lib/styles/app.css?url";
 
-const getUser = createServerFn({ method: "GET" }).handler(async () => {
-  const { headers } = getWebRequest()!;
-  const session = await auth.api.getSession({ headers });
+interface UserData {
+  id: string;
+  email?: string;
+  user_metadata: { [key: string]: object };
+  app_metadata: { [key: string]: object };
+}
 
-  return session?.user || null;
-});
+const getUser = createServerFn({ method: "GET" })
+  .validator((d: unknown) => d as void)
+  .handler(async () => {
+    const supabase = getSupabaseServerClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.warn("Auth error:", error);
+      return null;
+    }
+    if (!user) return null;
+    
+    // Return only serializable user data
+    const { id, email, user_metadata, app_metadata } = user;
+    return { id, email, user_metadata, app_metadata } as UserData;
+  });
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   user: Awaited<ReturnType<typeof getUser>>;
 }>()({
   beforeLoad: async ({ context }) => {
+    // Invalidate the user query to ensure fresh data
+    await context.queryClient.invalidateQueries({ queryKey: ["user"] });
+    
     const user = await context.queryClient.fetchQuery({
       queryKey: ["user"],
       queryFn: ({ signal }) => getUser({ signal }),
-    }); // we're using react-query for caching, see router.tsx
+      staleTime: 0, // Consider the data stale immediately
+    });
     return { user };
   },
   head: () => ({
@@ -43,7 +62,7 @@ export const Route = createRootRouteWithContext<{
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStarter",
+        title: "TanStack Supabase Router",
       },
     ],
     links: [{ rel: "stylesheet", href: appCss }],

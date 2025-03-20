@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+for shadcn installation always use npx shadcn@canary <package-name>

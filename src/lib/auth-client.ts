@@ -1,7 +1,11 @@
-import { createAuthClient } from "better-auth/react";
+import { createBrowserClient } from '@supabase/ssr'
 
-const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_BASE_URL,
-});
+if (!import.meta.env.VITE_SUPABASE_URL) throw new Error('Missing VITE_SUPABASE_URL')
+if (!import.meta.env.VITE_SUPABASE_ANON_KEY) throw new Error('Missing VITE_SUPABASE_ANON_KEY')
 
-export default authClient;
+const supabaseClient = createBrowserClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+export default supabaseClient
