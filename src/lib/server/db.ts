@@ -1,7 +1,14 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { createClient } from '@supabase/supabase-js'
 
-import * as schema from "./schema";
+if (!process.env.SUPABASE_URL) throw new Error('Missing SUPABASE_URL')
+if (!process.env.SUPABASE_ANON_KEY) throw new Error('Missing SUPABASE_ANON_KEY')
 
-const driver = postgres(process.env.DATABASE_URL as string);
-export const db = drizzle({ client: driver, schema });
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+)
+
+export const serviceRoleClient = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+)
