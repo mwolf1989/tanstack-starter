@@ -5,8 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/lib/components/ui/ca
 import { Button } from '~/lib/components/ui/button'
 import { Input } from '~/lib/components/ui/input'
 import { useState } from 'react'
-import { useRouter } from '@tanstack/react-router'
 import { TodoSchema, CreateTodoSchema, UpdateTodoSchema, type Todo } from '~/schema'
+import { useMutation } from '@tanstack/react-query'
+import { useRouter } from '@tanstack/react-router'
+
+const TODOS_QUERY_KEY = ['todos'] as const
 
 const getTodos = createServerFn({ method: 'GET' })
   .validator((data: unknown) => {
@@ -96,7 +99,7 @@ export const Route = createFileRoute('/tasks/')({
   component: RouteComponent,
   loader: async ({ context }) => {
     const todos = await context.queryClient.fetchQuery({
-      queryKey: ['todos'],
+      queryKey: TODOS_QUERY_KEY,
       queryFn: () => getTodos(),
     })
     return { todos }
@@ -108,14 +111,28 @@ function RouteComponent() {
   const [newTodoTask, setNewTodoTask] = useState('')
   const router = useRouter()
 
+  const createTodoMutation = useMutation({
+    mutationFn: (task: string) => createTodo({ data: { task } }),
+    onSuccess: () => {
+      router.invalidate()
+    },
+  })
+
+  const updateTodoMutation = useMutation({
+    mutationFn: (data: { id: number; is_complete: boolean }) => 
+      updateTodo({ data }),
+    onSuccess: () => {
+      router.invalidate()
+    },
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTodoTask.trim() || newTodoTask.trim().length <= 3) return
 
     try {
-      await createTodo({ data: { task: newTodoTask.trim() } })
+      await createTodoMutation.mutateAsync(newTodoTask.trim())
       setNewTodoTask('')
-      await router.invalidate()
     } catch (error) {
       console.error('Error creating todo:', error)
     }
@@ -123,8 +140,10 @@ function RouteComponent() {
 
   const handleToggleTodo = async (todo: Todo) => {
     try {
-      await updateTodo({ data: { id: todo.id, is_complete: !todo.is_complete } })
-      await router.invalidate()
+      await updateTodoMutation.mutateAsync({
+        id: todo.id,
+        is_complete: !todo.is_complete
+      })
     } catch (error) {
       console.error('Error updating todo:', error)
     }
