@@ -7,14 +7,14 @@ import { getSupabaseServerClient } from "~/lib/server/auth";
 const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const supabase = getSupabaseServerClient();
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { user }, error } = await supabase.auth.getUser();
     
-    if (error || !session) {
+    if (error || !user) {
       return { authenticated: false };
     }
     
     // Return only serializable user data
-    const { id, email, user_metadata, app_metadata } = session.user;
+    const { id, email, user_metadata, app_metadata } = user;
     return { 
       authenticated: true,
       user: { id, email, user_metadata, app_metadata }
