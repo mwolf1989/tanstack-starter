@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { getSupabaseServerClient } from '~/lib/server/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '~/lib/components/ui/card'
 import { Button } from '~/lib/components/ui/button'
 import { Input } from '~/lib/components/ui/input'
@@ -11,15 +10,9 @@ import { useRouter } from '@tanstack/react-router'
 
 const TODOS_QUERY_KEY = ['todos'] as const
 
-const getTodos = createServerFn({ method: 'GET' })
-  .validator((data: unknown) => {
-    if (data !== undefined) {
-      throw new Error('GET request should not have data')
-    }
-    return undefined
-  })
-  .handler(async () => {
-    const supabase = getSupabaseServerClient()
+const getTodos = createServerFn({ method: 'GET' }).handler(async () => {
+  const { getSupabaseServerClient } = await import('~/lib/server/auth')
+  const supabase = getSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
@@ -40,60 +33,60 @@ const getTodos = createServerFn({ method: 'GET' })
     return TodoSchema.array().parse(todos)
   })
 
-const createTodo = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => CreateTodoSchema.parse(data))
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      throw new Error('User not authenticated')
-    }
+const createTodo = createServerFn({ method: 'POST' }).handler(async ({ data }: { data: unknown }) => {
+  const validatedData = CreateTodoSchema.parse(data)
+  const { getSupabaseServerClient } = await import('~/lib/server/auth')
+  const supabase = getSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: todo, error } = await supabase
-      .from('todos')
-      .insert([
-        {
-          task: data.task,
-          user_id: user.id,
-        },
-      ])
-      .select()
-      .single()
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
 
-    if (error) {
-      console.error('Error creating todo:', error)
-      throw error
-    }
+  const { data: todo, error } = await supabase
+    .from('todos')
+    .insert([
+      {
+        task: validatedData.task,
+        user_id: user.id,
+      },
+    ])
+    .select()
+    .single()
 
-    return TodoSchema.parse(todo)
-  })
+  if (error) {
+    console.error('Error creating todo:', error)
+    throw error
+  }
 
-const updateTodo = createServerFn({ method: 'POST' })
-  .validator((data: unknown) => UpdateTodoSchema.parse(data))
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      throw new Error('User not authenticated')
-    }
+  return TodoSchema.parse(todo)
+})
 
-    const { data: todo, error } = await supabase
-      .from('todos')
-      .update({ is_complete: data.is_complete })
-      .eq('id', data.id)
-      .eq('user_id', user.id)
-      .select()
-      .single()
+const updateTodo = createServerFn({ method: 'POST' }).handler(async ({ data }: { data: unknown }) => {
+  const validatedData = UpdateTodoSchema.parse(data)
+  const { getSupabaseServerClient } = await import('~/lib/server/auth')
+  const supabase = getSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-    if (error) {
-      console.error('Error updating todo:', error)
-      throw error
-    }
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
 
-    return TodoSchema.parse(todo)
-  })
+  const { data: todo, error } = await supabase
+    .from('todos')
+    .update({ is_complete: validatedData.is_complete })
+    .eq('id', validatedData.id)
+    .eq('user_id', user.id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating todo:', error)
+    throw error
+  }
+
+  return TodoSchema.parse(todo)
+})
 
 export const Route = createFileRoute('/tasks/')({
   component: RouteComponent,

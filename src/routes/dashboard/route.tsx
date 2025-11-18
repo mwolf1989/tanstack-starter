@@ -1,11 +1,11 @@
 import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { Button } from "~/lib/components/ui/button";
 import { createServerFn } from "@tanstack/react-start";
-import { getSupabaseServerClient } from "~/lib/server/auth";
 
 // Create a server function to check authentication
 const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
   try {
+    const { getSupabaseServerClient } = await import("~/lib/server/auth");
     const supabase = getSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     

@@ -1,6 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getSupabaseServerClient } from "~/lib/server/auth";
 import { Header } from "~/lib/components/Header";
 import { Hero } from "~/lib/components/Hero";
 import { Features } from "~/lib/components/Features";
@@ -9,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 
 // Create a server function for sign out
 export const signOutFn = createServerFn().handler(async () => {
+  const { getSupabaseServerClient } = await import("~/lib/server/auth");
   const supabase = getSupabaseServerClient();
   const { error } = await supabase.auth.signOut();
   if (error) {

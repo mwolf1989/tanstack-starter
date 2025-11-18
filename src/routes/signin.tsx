@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/lib
 import { useRouter } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import authClient from "~/lib/auth-client";
-import { getSupabaseServerClient } from "~/lib/server/auth";
 
 const REDIRECT_URL = "/dashboard";
 
@@ -25,14 +24,13 @@ interface SignInResult {
 }
 
 // Create a server function for sign-in that matches the example
-export const signInFn = createServerFn()
-  .validator((d: unknown) => d as SignInCredentials)
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
+export const signInFn = createServerFn({ method: "POST" }).handler(async ({ data }: { data: SignInCredentials }) => {
+  const { getSupabaseServerClient } = await import("~/lib/server/auth");
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: data.email,
+    password: data.password,
+  });
 
     if (error) {
       return {

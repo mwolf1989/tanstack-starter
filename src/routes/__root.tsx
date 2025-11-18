@@ -11,7 +11,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
-import { getSupabaseServerClient } from "~/lib/server/auth";
 import appCss from "~/lib/styles/app.css?url";
 
 interface UserData {
@@ -21,10 +20,9 @@ interface UserData {
   app_metadata: { [key: string]: object };
 }
 
-const getUser = createServerFn({ method: "GET" })
-  .validator((d: unknown) => d as void)
-  .handler(async () => {
-    const supabase = getSupabaseServerClient();
+const getUser = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSupabaseServerClient } = await import("~/lib/server/auth");
+  const supabase = getSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) {
       console.warn("Auth error:", error);

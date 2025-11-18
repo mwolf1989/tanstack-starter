@@ -8,104 +8,142 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as TasksRouteRouteImport } from './routes/tasks/route'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as TasksIndexRouteImport } from './routes/tasks/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as SigninImport } from './routes/signin'
-import { Route as TasksRouteImport } from './routes/tasks/route'
-import { Route as DashboardRouteImport } from './routes/dashboard/route'
-import { Route as IndexImport } from './routes/index'
-import { Route as TasksIndexImport } from './routes/tasks/index'
-import { Route as DashboardIndexImport } from './routes/dashboard/index'
-
-// Create/Update Routes
-
-const SigninRoute = SigninImport.update({
+const SigninRoute = SigninRouteImport.update({
   id: '/signin',
   path: '/signin',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const TasksRouteRoute = TasksRouteImport.update({
+const TasksRouteRoute = TasksRouteRouteImport.update({
   id: '/tasks',
   path: '/tasks',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const DashboardRouteRoute = DashboardRouteImport.update({
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const TasksIndexRoute = TasksIndexImport.update({
+const TasksIndexRoute = TasksIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TasksRouteRoute,
 } as any)
-
-const DashboardIndexRoute = DashboardIndexImport.update({
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/tasks': typeof TasksRouteRouteWithChildren
+  '/signin': typeof SigninRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/tasks/': typeof TasksIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/signin': typeof SigninRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/tasks': typeof TasksIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/tasks': typeof TasksRouteRouteWithChildren
+  '/signin': typeof SigninRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/tasks/': typeof TasksIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/tasks'
+    | '/signin'
+    | '/dashboard/'
+    | '/tasks/'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/signin' | '/dashboard' | '/tasks'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/tasks'
+    | '/signin'
+    | '/dashboard/'
+    | '/tasks/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  TasksRouteRoute: typeof TasksRouteRouteWithChildren
+  SigninRoute: typeof SigninRoute
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRoute
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/tasks': {
       id: '/tasks'
       path: '/tasks'
       fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof TasksRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/signin': {
-      id: '/signin'
-      path: '/signin'
-      fullPath: '/signin'
-      preLoaderRoute: typeof SigninImport
-      parentRoute: typeof rootRoute
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
+    '/': {
+      id: '/'
       path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexImport
-      parentRoute: typeof DashboardRouteImport
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/tasks/': {
       id: '/tasks/'
       path: '/'
       fullPath: '/tasks/'
-      preLoaderRoute: typeof TasksIndexImport
-      parentRoute: typeof TasksRouteImport
+      preLoaderRoute: typeof TasksIndexRouteImport
+      parentRoute: typeof TasksRouteRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
   }
 }
-
-// Create and export the route tree
 
 interface DashboardRouteRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -131,110 +169,21 @@ const TasksRouteRouteWithChildren = TasksRouteRoute._addFileChildren(
   TasksRouteRouteChildren,
 )
 
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/tasks': typeof TasksRouteRouteWithChildren
-  '/signin': typeof SigninRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/tasks/': typeof TasksIndexRoute
-}
-
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/signin': typeof SigninRoute
-  '/dashboard': typeof DashboardIndexRoute
-  '/tasks': typeof TasksIndexRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/tasks': typeof TasksRouteRouteWithChildren
-  '/signin': typeof SigninRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/tasks/': typeof TasksIndexRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/dashboard'
-    | '/tasks'
-    | '/signin'
-    | '/dashboard/'
-    | '/tasks/'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/signin' | '/dashboard' | '/tasks'
-  id:
-    | '__root__'
-    | '/'
-    | '/dashboard'
-    | '/tasks'
-    | '/signin'
-    | '/dashboard/'
-    | '/tasks/'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  TasksRouteRoute: typeof TasksRouteRouteWithChildren
-  SigninRoute: typeof SigninRoute
-}
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   TasksRouteRoute: TasksRouteRouteWithChildren,
   SigninRoute: SigninRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/dashboard",
-        "/tasks",
-        "/signin"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/dashboard": {
-      "filePath": "dashboard/route.tsx",
-      "children": [
-        "/dashboard/"
-      ]
-    },
-    "/tasks": {
-      "filePath": "tasks/route.tsx",
-      "children": [
-        "/tasks/"
-      ]
-    },
-    "/signin": {
-      "filePath": "signin.tsx"
-    },
-    "/dashboard/": {
-      "filePath": "dashboard/index.tsx",
-      "parent": "/dashboard"
-    },
-    "/tasks/": {
-      "filePath": "tasks/index.tsx",
-      "parent": "/tasks"
-    }
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }
-ROUTE_MANIFEST_END */
