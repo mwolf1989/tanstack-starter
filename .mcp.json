@@ -2,7 +2,10 @@
   "mcpServers": {
     "linear": {
       "type": "http",
-      "url": "https://mcp.linear.app"
+      "url": "https://mcp.linear.app",
+      "headers": {
+        "Authorization": "Bearer ${LINEAR_API_KEY}"
+      }
     }
   }
 }
