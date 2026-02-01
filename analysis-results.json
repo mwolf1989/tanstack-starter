@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-02-01",
+  "security": {
+    "audit": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0
+      },
+      "totalDependencies": 437
+    },
+    "hardcodedSecrets": false,
+    "xssVulnerabilities": false,
+    "sqlInjection": false,
+    "csrfProtection": "supabase-managed"
+  },
+  "quality": {
+    "typescript": {
+      "errors": 13,
+      "errorCategories": [
+        "import.meta.env type issues (4)",
+        "server function type mismatches (5)",
+        "missing zod module type (1)",
+        "css import type (1)",
+        "implicit any (2)"
+      ]
+    },
+    "eslint": {
+      "errorCount": 1,
+      "warningCount": 0,
+      "errors": [
+        "Hero.tsx: @typescript-eslint/no-explicit-any"
+      ]
+    },
+    "fileStats": {
+      "typescript": 2,
+      "tsx": 25,
+      "routes": 7,
+      "components": 12,
+      "schemas": 2
+    }
+  },
+  "multiTenancy": {
+    "implemented": false,
+    "tenantFiles": [],
+    "tenantPatterns": [],
+    "currentArchitecture": "single-user-per-resource",
+    "recommendation": "needs-implementation"
+  },
+  "testing": {
+    "testFiles": 0,
+    "coverage": "none",
+    "testingFramework": "not-configured"
+  },
+  "performance": {
+    "bundleSplitting": "tanstack-router-default",
+    "lazyLoading": "route-based",
+    "caching": "react-query",
+    "devtools": ["react-query-devtools", "tanstack-router-devtools"]
+  },
+  "bestPractices": {
+    "errorBoundaries": true,
+    "inputValidation": true,
+    "typeChecking": "strict",
+    "rlsEnabled": true,
+    "environmentVariables": "proper"
+  }
+}
