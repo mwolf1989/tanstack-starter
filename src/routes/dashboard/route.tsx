@@ -1,6 +1,7 @@
 import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { UserMenu } from "~/lib/components/UserMenu";
+import { OrganizationSwitcher } from "~/lib/components/OrganizationSwitcher";
 
 // Create a server function to check authentication
 const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
@@ -64,6 +65,7 @@ function DashboardLayout() {
               <Link to="/">Heartwood</Link>
             </div>
             <nav className="flex items-center gap-2">
+              <OrganizationSwitcher />
               <UserMenu email={user?.email} />
             </nav>
           </div>

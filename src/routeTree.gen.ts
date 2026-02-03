@@ -13,6 +13,11 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardOrganizationsIndexRouteImport } from './routes/dashboard/organizations/index'
+import { Route as DashboardOrganizationsNewRouteImport } from './routes/dashboard/organizations/new'
+import { Route as DashboardOrganizationsOrgIdIndexRouteImport } from './routes/dashboard/organizations/$orgId/index'
+import { Route as DashboardOrganizationsOrgIdSettingsRouteImport } from './routes/dashboard/organizations/$orgId/settings'
+import { Route as DashboardOrganizationsOrgIdMembersRouteImport } from './routes/dashboard/organizations/$orgId/members'
 
 const SigninRoute = SigninRouteImport.update({
   id: '/signin',
@@ -34,17 +39,57 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardOrganizationsIndexRoute =
+  DashboardOrganizationsIndexRouteImport.update({
+    id: '/organizations/',
+    path: '/organizations/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardOrganizationsNewRoute =
+  DashboardOrganizationsNewRouteImport.update({
+    id: '/organizations/new',
+    path: '/organizations/new',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardOrganizationsOrgIdIndexRoute =
+  DashboardOrganizationsOrgIdIndexRouteImport.update({
+    id: '/organizations/$orgId/',
+    path: '/organizations/$orgId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardOrganizationsOrgIdSettingsRoute =
+  DashboardOrganizationsOrgIdSettingsRouteImport.update({
+    id: '/organizations/$orgId/settings',
+    path: '/organizations/$orgId/settings',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardOrganizationsOrgIdMembersRoute =
+  DashboardOrganizationsOrgIdMembersRouteImport.update({
+    id: '/organizations/$orgId/members',
+    path: '/organizations/$orgId/members',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/organizations/new': typeof DashboardOrganizationsNewRoute
+  '/dashboard/organizations/': typeof DashboardOrganizationsIndexRoute
+  '/dashboard/organizations/$orgId/members': typeof DashboardOrganizationsOrgIdMembersRoute
+  '/dashboard/organizations/$orgId/settings': typeof DashboardOrganizationsOrgIdSettingsRoute
+  '/dashboard/organizations/$orgId/': typeof DashboardOrganizationsOrgIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/signin': typeof SigninRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/organizations/new': typeof DashboardOrganizationsNewRoute
+  '/dashboard/organizations': typeof DashboardOrganizationsIndexRoute
+  '/dashboard/organizations/$orgId/members': typeof DashboardOrganizationsOrgIdMembersRoute
+  '/dashboard/organizations/$orgId/settings': typeof DashboardOrganizationsOrgIdSettingsRoute
+  '/dashboard/organizations/$orgId': typeof DashboardOrganizationsOrgIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -52,13 +97,45 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/signin': typeof SigninRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/organizations/new': typeof DashboardOrganizationsNewRoute
+  '/dashboard/organizations/': typeof DashboardOrganizationsIndexRoute
+  '/dashboard/organizations/$orgId/members': typeof DashboardOrganizationsOrgIdMembersRoute
+  '/dashboard/organizations/$orgId/settings': typeof DashboardOrganizationsOrgIdSettingsRoute
+  '/dashboard/organizations/$orgId/': typeof DashboardOrganizationsOrgIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/signin' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/signin'
+    | '/dashboard/'
+    | '/dashboard/organizations/new'
+    | '/dashboard/organizations/'
+    | '/dashboard/organizations/$orgId/members'
+    | '/dashboard/organizations/$orgId/settings'
+    | '/dashboard/organizations/$orgId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/signin' | '/dashboard'
-  id: '__root__' | '/' | '/dashboard' | '/signin' | '/dashboard/'
+  to:
+    | '/'
+    | '/signin'
+    | '/dashboard'
+    | '/dashboard/organizations/new'
+    | '/dashboard/organizations'
+    | '/dashboard/organizations/$orgId/members'
+    | '/dashboard/organizations/$orgId/settings'
+    | '/dashboard/organizations/$orgId'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/signin'
+    | '/dashboard/'
+    | '/dashboard/organizations/new'
+    | '/dashboard/organizations/'
+    | '/dashboard/organizations/$orgId/members'
+    | '/dashboard/organizations/$orgId/settings'
+    | '/dashboard/organizations/$orgId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -97,15 +174,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/organizations/': {
+      id: '/dashboard/organizations/'
+      path: '/organizations'
+      fullPath: '/dashboard/organizations/'
+      preLoaderRoute: typeof DashboardOrganizationsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/organizations/new': {
+      id: '/dashboard/organizations/new'
+      path: '/organizations/new'
+      fullPath: '/dashboard/organizations/new'
+      preLoaderRoute: typeof DashboardOrganizationsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/organizations/$orgId/': {
+      id: '/dashboard/organizations/$orgId/'
+      path: '/organizations/$orgId'
+      fullPath: '/dashboard/organizations/$orgId/'
+      preLoaderRoute: typeof DashboardOrganizationsOrgIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/organizations/$orgId/settings': {
+      id: '/dashboard/organizations/$orgId/settings'
+      path: '/organizations/$orgId/settings'
+      fullPath: '/dashboard/organizations/$orgId/settings'
+      preLoaderRoute: typeof DashboardOrganizationsOrgIdSettingsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/organizations/$orgId/members': {
+      id: '/dashboard/organizations/$orgId/members'
+      path: '/organizations/$orgId/members'
+      fullPath: '/dashboard/organizations/$orgId/members'
+      preLoaderRoute: typeof DashboardOrganizationsOrgIdMembersRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
 interface DashboardRouteRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardOrganizationsNewRoute: typeof DashboardOrganizationsNewRoute
+  DashboardOrganizationsIndexRoute: typeof DashboardOrganizationsIndexRoute
+  DashboardOrganizationsOrgIdMembersRoute: typeof DashboardOrganizationsOrgIdMembersRoute
+  DashboardOrganizationsOrgIdSettingsRoute: typeof DashboardOrganizationsOrgIdSettingsRoute
+  DashboardOrganizationsOrgIdIndexRoute: typeof DashboardOrganizationsOrgIdIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardOrganizationsNewRoute: DashboardOrganizationsNewRoute,
+  DashboardOrganizationsIndexRoute: DashboardOrganizationsIndexRoute,
+  DashboardOrganizationsOrgIdMembersRoute:
+    DashboardOrganizationsOrgIdMembersRoute,
+  DashboardOrganizationsOrgIdSettingsRoute:
+    DashboardOrganizationsOrgIdSettingsRoute,
+  DashboardOrganizationsOrgIdIndexRoute: DashboardOrganizationsOrgIdIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(

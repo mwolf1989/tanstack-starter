@@ -39,10 +39,12 @@ heartwood-saas-starter/
 ├── src/
 │   ├── lib/
 │   │   ├── components/     # Reusable UI components
-│   │   │   └── ui/         # shadcn/ui components (Button, Card, Input, etc.)
+│   │   │   ├── ui/         # shadcn/ui components (Button, Card, Input, etc.)
+│   │   │   └── OrganizationSwitcher.tsx  # Org selection dropdown
 │   │   ├── server/         # Server-side utilities
 │   │   │   ├── auth.ts     # Supabase SSR client and auth helpers
-│   │   │   └── db.ts       # Database client instances
+│   │   │   ├── db.ts       # Database client instances
+│   │   │   └── organizations.ts  # Organization management functions
 │   │   └── styles/         # Global CSS styles
 │   ├── routes/             # TanStack Router file-based routes
 │   │   ├── __root.tsx      # Root layout with user context
@@ -50,11 +52,23 @@ heartwood-saas-starter/
 │   │   ├── signin.tsx      # Authentication page
 │   │   └── dashboard/      # Protected dashboard routes
 │   │       ├── route.tsx   # Dashboard layout with auth guard
-│   │       └── index.tsx   # Dashboard index
-│   ├── schema/             # Zod validation schemas (add new schemas here)
+│   │       ├── index.tsx   # Dashboard index with org context
+│   │       └── organizations/  # Organization management routes
+│   │           ├── index.tsx      # List user's organizations
+│   │           ├── new.tsx        # Create new organization
+│   │           └── $orgId/        # Org-specific routes
+│   │               ├── index.tsx    # Organization details
+│   │               ├── settings.tsx # Organization settings
+│   │               └── members.tsx  # Member management
+│   ├── schema/             # Zod validation schemas
+│   │   ├── index.ts        # Schema exports
+│   │   └── organization.ts # Organization-related schemas
 │   └── router.tsx          # Router configuration
 ├── supabase/
 │   ├── migrations/         # Database migrations
+│   │   ├── 20240320000000_create_todos.sql
+│   │   ├── 20240321000000_create_organizations.sql
+│   │   └── 20240322000000_add_org_to_todos.sql
 │   └── config.toml         # Supabase local config
 ├── public/                 # Static assets
 ├── .cursor/                # Cursor IDE MCP configuration
@@ -206,35 +220,6 @@ pnpm start        # Start production server
 
 ## Security & Data Isolation
 
-### Row Level Security (RLS)
-All database tables must have RLS enabled for tenant data isolation. Reference implementation in `supabase/migrations/20240320000000_create_todos.sql`:
-
-```sql
--- Enable RLS on the table
-ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
-
--- Users can only view their own data
-CREATE POLICY "Users can view their own data"
-  ON your_table FOR SELECT
-  USING (auth.uid() = user_id);
-
--- Users can only insert their own data
-CREATE POLICY "Users can insert their own data"
-  ON your_table FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
--- Users can only update their own data
-CREATE POLICY "Users can update their own data"
-  ON your_table FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
--- Users can only delete their own data
-CREATE POLICY "Users can delete their own data"
-  ON your_table FOR DELETE
-  USING (auth.uid() = user_id);
-```
-
 ### Server-Side Auth Checks
 Always verify authentication in server functions before database operations:
 
@@ -269,15 +254,198 @@ const createItem = createServerFn({ method: "POST" })
   });
 ```
 
-## Multi-Tenancy Considerations
+## Multi-Tenancy Architecture
 
-Current implementation uses `user_id` for data isolation (single-user tenancy). For organization-based multi-tenancy, extend with:
+This starter kit includes a complete multi-tenancy implementation using an organization-based model.
 
-1. **Tenant/Organization model**: Add `organization_id` to tables
-2. **RLS at tenant level**: `auth.uid() IN (SELECT user_id FROM org_members WHERE org_id = organization_id)`
-3. **Role-based access**: Admin vs member permissions within tenants
+### Database Schema
 
-Architecture decisions to be documented as features are implemented.
+#### Core Tables
+
+```
+organizations
+├── id (uuid, PK)
+├── name (text)
+├── slug (text, unique) - URL-friendly identifier
+├── logo_url (text, nullable)
+├── created_at (timestamp)
+└── updated_at (timestamp)
+
+organization_members
+├── id (uuid, PK)
+├── organization_id (uuid, FK → organizations)
+├── user_id (uuid, FK → auth.users)
+├── role (enum: 'owner', 'admin', 'member')
+├── created_at (timestamp)
+└── updated_at (timestamp)
+└── UNIQUE (organization_id, user_id)
+
+user_profiles
+├── id (uuid, PK, FK → auth.users)
+├── display_name (text, nullable)
+├── avatar_url (text, nullable)
+├── current_organization_id (uuid, FK → organizations)
+├── created_at (timestamp)
+└── updated_at (timestamp)
+```
+
+#### Data Tables Pattern
+
+All tenant-scoped data tables should include:
+```sql
+organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE
+```
+
+Example (todos table):
+```sql
+ALTER TABLE todos ADD COLUMN organization_id uuid REFERENCES organizations(id);
+```
+
+### Row Level Security (RLS)
+
+#### Helper Functions
+
+```sql
+-- Check if user is member of organization
+is_organization_member(org_id uuid) → boolean
+
+-- Check if user has specific role
+has_organization_role(org_id uuid, role organization_role) → boolean
+
+-- Check if user is admin or owner
+is_organization_admin(org_id uuid) → boolean
+
+-- Check if user is owner
+is_organization_owner(org_id uuid) → boolean
+
+-- Get user's organization IDs
+get_user_organization_ids() → SETOF uuid
+
+-- Get current/active organization
+get_current_organization_id() → uuid
+```
+
+#### Policy Patterns
+
+**Organization-scoped data (e.g., todos, projects):**
+```sql
+-- SELECT: Members can view org data
+CREATE POLICY "..." ON table_name FOR SELECT
+  USING (is_organization_member(organization_id));
+
+-- INSERT: Members can create in their orgs
+CREATE POLICY "..." ON table_name FOR INSERT
+  WITH CHECK (is_organization_member(organization_id) AND user_id = auth.uid());
+
+-- UPDATE: Creator or admin can update
+CREATE POLICY "..." ON table_name FOR UPDATE
+  USING (user_id = auth.uid() OR is_organization_admin(organization_id));
+
+-- DELETE: Creator or admin can delete
+CREATE POLICY "..." ON table_name FOR DELETE
+  USING (user_id = auth.uid() OR is_organization_admin(organization_id));
+```
+
+### Roles & Permissions
+
+| Role | Capabilities |
+|------|-------------|
+| **Owner** | Full control, can delete org, transfer ownership, manage all members |
+| **Admin** | Manage members (except owners), update org settings, full data access |
+| **Member** | Read org data, create/update/delete own data |
+
+### Key Files
+
+```
+src/
+├── lib/
+│   ├── server/
+│   │   └── organizations.ts  # Server functions for org management
+│   └── components/
+│       └── OrganizationSwitcher.tsx  # Org selection dropdown
+├── routes/
+│   └── dashboard/
+│       └── organizations/
+│           ├── index.tsx     # List organizations
+│           ├── new.tsx       # Create organization
+│           └── $orgId/
+│               ├── index.tsx    # Org details
+│               ├── settings.tsx # Org settings (admin)
+│               └── members.tsx  # Member management
+└── schema/
+    └── organization.ts  # Zod schemas for validation
+```
+
+### Server Functions
+
+```typescript
+// Queries
+getUserOrganizations()     // Get all orgs user is member of
+getOrganization({ id })    // Get single org by ID
+getOrganizationBySlug({ slug })
+getOrganizationMembers({ organizationId })
+getUserProfile()           // Get current user's profile
+getUserRoleInOrganization({ organizationId })
+
+// Mutations
+createOrganization({ name, slug, logo_url? })
+updateOrganization({ id, updates })
+deleteOrganization({ id })  // Owner only
+setCurrentOrganization({ organizationId })
+addOrganizationMember({ organizationId, userId, role })
+updateMemberRole({ memberId, role })
+removeMember({ memberId })
+leaveOrganization({ organizationId })
+checkSlugAvailability({ slug })
+```
+
+### Usage Pattern
+
+```typescript
+// In a route loader - get org context
+export const Route = createFileRoute("/dashboard/projects")({
+  loader: async ({ context }) => {
+    const profile = await getUserProfile();
+    if (!profile?.current_organization_id) {
+      throw redirect({ to: "/dashboard/organizations" });
+    }
+
+    const projects = await getOrgProjects({
+      organizationId: profile.current_organization_id
+    });
+    return { projects };
+  },
+});
+
+// In a component - use org context
+function ProjectsList() {
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: () => getUserProfile(),
+  });
+
+  const orgId = profile?.current_organization_id;
+  // ... use orgId for data fetching
+}
+```
+
+### Database Migrations
+
+```
+supabase/migrations/
+├── 20240320000000_create_todos.sql        # Original todos (user-only)
+├── 20240321000000_create_organizations.sql # Multi-tenancy core
+└── 20240322000000_add_org_to_todos.sql    # Update todos for multi-tenancy
+```
+
+### Future Enhancements
+
+- [ ] Email-based member invitations
+- [ ] Organization-scoped API keys
+- [ ] Billing/subscription per organization
+- [ ] Organization-level settings/preferences
+- [ ] Audit logging per organization
+- [ ] Custom domain per organization
 
 ## Environment Variables
 
