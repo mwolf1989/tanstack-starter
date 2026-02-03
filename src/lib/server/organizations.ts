@@ -670,6 +670,10 @@ export const removeMember = createServerFn({ method: "POST" }).handler(
 
 /**
  * Leave an organization (any member can leave)
+ *
+ * This uses an atomic RPC function with row locking to prevent race conditions.
+ * The RPC ensures that if an owner is trying to leave while being the only
+ * member, the check and delete happen atomically.
  */
 export const leaveOrganization = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: { organizationId: string } }): Promise<void> => {
@@ -683,50 +687,25 @@ export const leaveOrganization = createServerFn({ method: "POST" }).handler(
       throw new Error("Unauthorized");
     }
 
-    // Check if user is the owner
-    const { data: membership } = await supabase
-      .from("organization_members")
-      .select("role")
-      .eq("organization_id", data.organizationId)
-      .eq("user_id", user.id)
-      .single();
+    // Use atomic RPC function to prevent race conditions
+    const { error } = await supabase.rpc("leave_organization", {
+      org_id: data.organizationId,
+    });
 
-    if (membership?.role === "owner") {
-      // Check if there are other members
-      const { count } = await supabase
-        .from("organization_members")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", data.organizationId);
-
-      if (count && count > 1) {
+    if (error) {
+      // Map PostgreSQL exception messages to user-friendly errors
+      if (error.message.includes("transfer ownership")) {
         throw new Error(
           "You must transfer ownership before leaving the organization"
         );
       }
-    }
-
-    const { error } = await supabase
-      .from("organization_members")
-      .delete()
-      .eq("organization_id", data.organizationId)
-      .eq("user_id", user.id);
-
-    if (error) {
+      if (error.message.includes("not a member")) {
+        throw new Error("You are not a member of this organization");
+      }
+      if (error.message.includes("not authenticated")) {
+        throw new Error("Unauthorized");
+      }
       throw new Error(`Failed to leave organization: ${error.message}`);
-    }
-
-    // Clear current organization if it was this one
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("current_organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.current_organization_id === data.organizationId) {
-      await supabase
-        .from("user_profiles")
-        .update({ current_organization_id: null })
-        .eq("id", user.id);
     }
   }
 );
