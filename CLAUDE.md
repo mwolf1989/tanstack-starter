@@ -46,18 +46,15 @@ heartwood-saas-starter/
 │   │   └── styles/         # Global CSS styles
 │   ├── routes/             # TanStack Router file-based routes
 │   │   ├── __root.tsx      # Root layout with user context
-│   │   ├── index.tsx       # Home page
+│   │   ├── index.tsx       # Home page (minimal landing)
 │   │   ├── signin.tsx      # Authentication page
-│   │   ├── dashboard/      # Protected dashboard routes
-│   │   │   ├── route.tsx   # Dashboard layout with auth guard
-│   │   │   └── index.tsx   # Dashboard index
-│   │   └── tasks/          # Tasks feature routes
-│   ├── schema/             # Zod validation schemas
-│   │   └── todo.ts         # Todo entity schemas
+│   │   └── dashboard/      # Protected dashboard routes
+│   │       ├── route.tsx   # Dashboard layout with auth guard
+│   │       └── index.tsx   # Dashboard index
+│   ├── schema/             # Zod validation schemas (add new schemas here)
 │   └── router.tsx          # Router configuration
 ├── supabase/
 │   ├── migrations/         # Database migrations
-│   ├── seed.sql            # Sample seed data
 │   └── config.toml         # Supabase local config
 ├── public/                 # Static assets
 ├── .cursor/                # Cursor IDE MCP configuration
@@ -95,12 +92,15 @@ export const Route = createFileRoute("/dashboard")({
 ```
 
 ### Validation with Zod
-All data schemas use Zod for runtime validation:
+Data schemas should use Zod for runtime validation:
 ```typescript
-export const CreateTodoSchema = z.object({
-  task: z.string().min(4, 'Task must be at least 4 characters long'),
+import { z } from 'zod';
+
+export const CreateEntitySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
 });
-export type CreateTodoData = z.infer<typeof CreateTodoSchema>;
+export type CreateEntityData = z.infer<typeof CreateEntitySchema>;
 ```
 
 ### Component Pattern (shadcn/ui)
@@ -134,9 +134,9 @@ pnpm install  # or npm install
 # Copy environment file
 cp .env.example .env
 
-# Configure Supabase credentials in .env:
-# - SUPABASE_URL
-# - SUPABASE_ANON_KEY
+# Configure Supabase credentials in .env (see .env.example):
+# - VITE_SUPABASE_URL and SUPABASE_URL (same value)
+# - VITE_SUPABASE_ANON_KEY and SUPABASE_ANON_KEY (same value)
 # - SUPABASE_SERVICE_ROLE_KEY
 ```
 
@@ -178,7 +178,7 @@ pnpm start        # Start production server
 - Components: `PascalCase.tsx`
 - Utilities: `camelCase.ts`
 - Routes: lowercase matching URL path (`signin.tsx`, `route.tsx`)
-- Schemas: entity name (`todo.ts`)
+- Schemas: entity name (e.g., `user.ts`, `project.ts`)
 
 ### Import Order (auto-sorted by Prettier)
 1. External dependencies
@@ -204,18 +204,89 @@ pnpm start        # Start production server
 - `src/routes/signin.tsx` - Sign in/up UI
 - `src/routes/dashboard/route.tsx` - Protected layout example
 
+## Security & Data Isolation
+
+### Row Level Security (RLS)
+All database tables must have RLS enabled for tenant data isolation. Reference implementation in `supabase/migrations/20240320000000_create_todos.sql`:
+
+```sql
+-- Enable RLS on the table
+ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
+
+-- Users can only view their own data
+CREATE POLICY "Users can view their own data"
+  ON your_table FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Users can only insert their own data
+CREATE POLICY "Users can insert their own data"
+  ON your_table FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Users can only update their own data
+CREATE POLICY "Users can update their own data"
+  ON your_table FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Users can only delete their own data
+CREATE POLICY "Users can delete their own data"
+  ON your_table FOR DELETE
+  USING (auth.uid() = user_id);
+```
+
+### Server-Side Auth Checks
+Always verify authentication in server functions before database operations:
+
+```typescript
+const getData = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSupabaseServerClient } = await import("~/lib/server/auth");
+  const supabase = getSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  // Proceed with user-scoped query
+  const { data, error } = await supabase
+    .from("your_table")
+    .select("*")
+    .eq("user_id", user.id);  // Always filter by user_id
+
+  return data;
+});
+```
+
+### Input Validation
+All user inputs must be validated with Zod before processing:
+
+```typescript
+const createItem = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: unknown }) => {
+    const validated = CreateItemSchema.parse(data);  // Validate first
+    // ... proceed with validated data
+  });
+```
+
 ## Multi-Tenancy Considerations
 
-> TBD - See HEA-27 for codebase analysis
+Current implementation uses `user_id` for data isolation (single-user tenancy). For organization-based multi-tenancy, extend with:
 
-Architecture, tenant isolation, and data segregation strategies to be documented after analysis.
+1. **Tenant/Organization model**: Add `organization_id` to tables
+2. **RLS at tenant level**: `auth.uid() IN (SELECT user_id FROM org_members WHERE org_id = organization_id)`
+3. **Role-based access**: Admin vs member permissions within tenants
+
+Architecture decisions to be documented as features are implemented.
 
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `SUPABASE_URL` | Supabase project URL | Yes |
-| `SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
+| `VITE_SUPABASE_URL` | Supabase project URL (client-side) | Yes |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key (client-side) | Yes |
+| `SUPABASE_URL` | Supabase project URL (server-side) | Yes |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key (server-side) | Yes |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | For admin ops |
 | `VITE_BASE_URL` | Application base URL | Yes |
 | `DATABASE_URL` | Direct database connection | For migrations |

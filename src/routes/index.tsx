@@ -1,10 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { Header } from "~/lib/components/Header";
-import { Hero } from "~/lib/components/Hero";
-import { Features } from "~/lib/components/Features";
 import { Footer } from "~/lib/components/Footer";
-import { User } from "@supabase/supabase-js";
+import { Button } from "~/lib/components/ui/button";
 
 // Create a server function for sign out
 export const signOutFn = createServerFn().handler(async () => {
@@ -21,7 +20,6 @@ export const signOutFn = createServerFn().handler(async () => {
 export const Route = createFileRoute("/")({
   component: Home,
   loader: ({ context }) => {
-    // Ensure we're using the latest user data from context
     return { user: context.user };
   },
 });
@@ -33,7 +31,6 @@ function Home() {
   const handleSignOut = async () => {
     try {
       await signOutFn();
-      // Refresh the router data
       await router.invalidate();
       router.navigate({ to: "/signin", search: { error: "", redirect: "/" } });
     } catch (error) {
@@ -43,11 +40,28 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user as User | null} onSignOut={handleSignOut} />
-      <main className="flex-1 pt-24 flex flex-col items-center">
-        <div className="container mx-auto max-w-7xl px-6">
-          <Hero user={user} />
-          <Features />
+      <Header user={user} onSignOut={handleSignOut} />
+      <main className="flex-1 pt-24 flex flex-col items-center justify-center">
+        <div className="container mx-auto max-w-4xl px-6 text-center">
+          <h1 className="text-5xl font-bold tracking-tight mb-6">
+            Heartwood SaaS Starter
+          </h1>
+          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Multi-tenant SaaS application foundation built with TanStack, React, and Supabase.
+          </p>
+          <div className="flex gap-4 justify-center">
+            {user ? (
+              <Button asChild size="lg">
+                <Link to="/dashboard">Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg">
+                <Link to="/signin" search={{ error: "", redirect: "/" }}>
+                  Get Started
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </main>
       <Footer />

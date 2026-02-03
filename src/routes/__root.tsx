@@ -13,7 +13,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import appCss from "~/lib/styles/app.css?url";
 
-interface UserData {
+export interface UserData {
   id: string;
   email?: string;
   user_metadata: { [key: string]: object };
@@ -60,7 +60,7 @@ export const Route = createRootRouteWithContext<{
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Supabase Router",
+        title: "Heartwood SaaS",
       },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
