@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@eslint-react/eslint-plugin": "^2.3.12",
-    "@eslint/js": "^9.22.0",
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.0.14",
     "@tanstack/eslint-plugin-query": "^5.90.2",
     "@tanstack/eslint-plugin-router": "^1.133.19",
